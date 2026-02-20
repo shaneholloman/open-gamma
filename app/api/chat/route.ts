@@ -3,7 +3,7 @@ import { convertToModelMessages, stepCountIs, streamText, type LanguageModel } f
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { google } from "@ai-sdk/google";
-import { experimental_createMCPClient } from "@ai-sdk/mcp";
+import { createMCPClient } from "@ai-sdk/mcp";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     return new Response("Too Many Requests", { status: 429 });
   }
 
-  let client: Awaited<ReturnType<typeof experimental_createMCPClient>> | null = null;
+  let client: Awaited<ReturnType<typeof createMCPClient>> | null = null;
 
   try {
     const body = await req.json();
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
       toolkits: ["GOOGLESLIDES", "COMPOSIO_SEARCH", "GEMINI"],
     });
 
-    client = await experimental_createMCPClient({
+    client = await createMCPClient({
       transport: {
         type: "http",
         url: toolSession.mcp.url,
@@ -92,7 +92,7 @@ export async function POST(req: Request) {
     });
 
     const mcpTools = await client.tools();
-    const coreMessages = convertToModelMessages(messages, { tools: mcpTools });
+    const coreMessages = await convertToModelMessages(messages, { tools: mcpTools });
 
     const result = streamText({
       model,
